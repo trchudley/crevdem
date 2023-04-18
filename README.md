@@ -35,9 +35,9 @@ As always when using ArcticDEM and REMA products, please [cite](#refererences) t
 After downloading, `crevdem` can be installed from the top-level directory via `pip install .`:
 
 ```bash
-git clone https://github.com/trchudley/CrevDEM
-cd CrevDEM
-pip install .  # add -e flag for editable mode
+git clone https://github.com/trchudley/crevdem
+cd crevdem
+pip install .
 ```
 
 CrevDEM has the following dependencies:
@@ -47,11 +47,11 @@ CrevDEM has the following dependencies:
   - NumPy
   - OpenCV
 
-The variogram analysis notebook requires additional packages, including `scikit-gstat`. If you would not like to install these yourself using `conda` or similar, use `pip install .[variogram]`.
+The variogram analysis notebook requires additional packages, including `scikit-gstat`. If you would rather not install these yourself using `conda` or similar, you can use `pip install .[variogram]` during the initial install.
 
 ## Install supplementary datasets
 
-Supplementary datasets are required to be available locally to complete geoid correction and filtering of non-glacial regions: specifically, the BedMachine Greenland v5 or BedMachine Antarctica v3 respectively (Morlighem _et al._ 2022a, 2022b) and, for Greenland, the GrIMP ice mask (Howat, 2017) for bedrock filtering.File or directory paths will be requested in the relevant functions.
+Supplementary datasets are required to be available locally to complete geoid correction and filtering of non-glacial regions: specifically, the BedMachine Greenland v5 or BedMachine Antarctica v3 respectively (Morlighem _et al._ 2022a, 2022b) and, for Greenland, the GrIMP ice mask (Howat, 2017) for bedrock filtering. File or directory paths will be requested in the relevant functions.
 
 These can be downloaded from the NSIDC manually ([Greenland BedMachine](https://doi.org/10.5067/GMEVBWFLWA7X), [Antarctic BedMachine](https://doi.org/10.5067/FPSU0V1MWUB6), [Greenland surface mask](https://doi.org/10.5067/B8X58MQBFUPA)) but for conveninence, download scripts are provided in the `supp_data` directory. The BedMachine download scripts are provided by the NSIDC, and require an Earthdata user account and password to be provided. The files will be downloaded into the directory the scripts are run. 
 
@@ -65,56 +65,57 @@ python download_bedmachine_antarctica_v3.py
 
 # Usage
 
-Jupyter Notebooks are provided in the `./notebooks` directory in order to provide an introduction into the use of CrevDEM.
+Jupyter Notebooks are provided in the `./notebooks` directory in order to provide an introduction into the use of CrevDEM. 
+
+Further documentation for individual functions can be accessed through Python's `help()` function, e.g. `help(crevdem.load_aws)`.
+
+The sections below briefly outline the user-exposed functions available through the package.
 
 ## Retreiving and Masking ArcticDEM strips
 
 ### Loading
 
-`xds = load_aws()` or `load_local()`
+`load_aws()` - Downloads the desired ArcticDEM/REMA strip from the AWS bucket as an xarray DataArray suitable for further processing by `crevdem`. Option to filter to bounds or GrIMP mask if provided. 2 m DEM strips are large in size and loading remotely from AWS may take some time.
 
-`geoid = get_bm_geoid()`
+`load_local()` - Loads the desired ArcticDEM/REMA DEM strip from direct filepaths as an xarray DataArray suitable for further processing by `crevdem`. Option to filter to bounds and bitmask.
 
-`xds['dem'] = geoidcorr(xds.dem, geoid)`
+### Filtering
 
-### Masking
+`mask_bedrock()` - Mask bedrock from the DEM. Can either provide your own mask (as a DataArray) using the `mask` variable (where land = 0/False and ice/ocean = 1/True), or provide the path to a directory containing the GrIMP 15 m output using the `grimp_mask_dir` variable.
 
-`mask_grimp = get_grimp_mask(xds.dem)` or `mask = get_bm_mask(xds.dem)`
+`geoid_correct()` - Geoid correct a DEM using a geoid. Can provide either your own geoid (as a DataArray) using the `geoid` variable, or the filepath to an appropriate BedMachine dataset using the `bedmachine_fpath` variable.
 
-`mask_sea = get_sea_mask(xds.dem)`  is get_sea_level also exposed?
+`mask_melange()` - Returns a DEM with mélange/ocean regions, as identified by `get_melange_mask()` function, filtered out. If no likely sea level is identified, returns the original DEM. DEM must be geoid-corrected.
 
-`mask = mask_grimp & mask_melange`
+`get_melange_mask()` - Returns a mask of mélange/ocean regions of a DEM, using sea level as returned by the `get_sea_level()` function. DEM must be geoid-corrected. In returned mask, land/ice is True and ocean is False.
 
-`xds['dem'] = mask(xds.dem, [mask1, mask2])`
-
+`get_sea_level()` - Get sea level following method of Shiggins _et al._ (2023). If no candidate sea level is identified, None is returned. DEM must be geoid-corrected.
 
 ## Extracting crevasse presence
 
-`xds['crev_depth'] = find(xds.dem)`
+`find()` - Batch processing of crevasse depths from input DEM strip.
 
 which wraps a few other exposed functions.
 
-`detrend`
+`detrend()` - Detrend the DEM DataArray using a large gaussian filter. Standard deviation size should be >> the features of interest (in the default `crevdem` settings, I set the gauss_std to be 3* the range).
 
-`bth`
+`bth()` - Apply a black top hat filter to the (detrended) DEM DataArray.
 
-`crev_mask`
+`threshold_depth()` - Returns crevasse mask (crevasse = 1; not crevasse = 0) from BTH-filtered DEM.
 
-`crev_depth`
+`interpolate_surface()` - Using the original DEM and crevasse mask, fill crevasses using GDAL FillNodata algorithm (inverse distance weighting). Smoothing iterations are applied to smooth  out artefacts.
+
+`calc_depth()` - Calculate crevasse depth from the raw DEM and the filled DEM.
 
 # Improvements
 
- - [ ] Write notebooks
- - [ ] Update 'Usage' section
- - [ ] Push to github
- - [ ] Verbose timing, BedMachine mask
- - [ ] Write proper tests
+ - [ ] Print timing during verbose output
+ - [ ] BedMachine mask option for Antarctica
 
 The tool is presented _as-is_, but requests/contributions to functionality are welcome (thomas.r.chudley@durham.ac.uk). Avenues for future work include the following:
 
- - Implement geoid-correction and filtering of land/ocean for Antarctica.
- - Additional filter for remnant cloud blunders (e.g. from difference to reference DEM mosaic?)
- - Explore alternative/custom Gaussian filters to prevent erosion at edges? Currently, Guassian and BTH filters return `Nan` if `NaN`s are present within the kernel, leading to margin effects. Could try and rewrite these functions to account for `NaN` values (`astropy` already has such a function for Gaussian filters but is _very_ slow)
+ - An additional filter for remnant cloud blunders, as being implemented in the latest ArcticDEM and REMA mosaic tools.
+ - Exploring alternative/custom Gaussian filters to prevent erosion at edges. Currently, Guassian and BTH filters return `Nan` if `NaN`s are present within the kernel, leading to lack of analysis at glacier margins. It might be possible to rewrite these functions to account for `NaN` values (`astropy` already has such a function for Gaussian filters but is _very_ slow)
 
 
 # References
