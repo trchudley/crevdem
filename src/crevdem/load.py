@@ -20,8 +20,7 @@ def load_local(
     bounds: Optional[tuple] = None,
     bitmask_fpath: Optional[str] = None,
 ) -> DataArray:
-
-    """Loads the desired ArcticDEM/REMA DEM strip from direct filepaths as an xarray
+    """Loads the desired ArcticDEM/REMA DEM strip, from local filepaths, as an xarray
     DataArray suitable for further processing by `crevdem`. Option to filter to bounds
     and bitmask.
 
@@ -74,11 +73,10 @@ def load_aws(
     version: Optional[str] = "s2s041",
     preview: Optional[bool] = False,
 ) -> DataArray:
-
-    """Downloads the desired ArcticDEM/REMA strip from the AWS bucket as an xarray
-    DataArray suitable for further processing by `crevdem`. Option to filter to bounds or
-    GrIMP mask if provided. 2 m DEM strips are large in size and loading remotely from
-    AWS may take some time.
+    """Returns the selected ArcticDEM/REMA strip, downloaded from the relevant AWS
+    bucket, as an xarray DataArray suitable for further processing by `crevdem`. Option
+    to filter to bounds and bitmask. 2 m DEM strips are large in size and loading
+    remotely from AWS may take some time.
 
     :param dataset: Either 'arcticdem' or 'rema'. Case-sensitive.
     :type dataset: str

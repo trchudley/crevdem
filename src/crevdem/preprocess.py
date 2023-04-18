@@ -22,7 +22,7 @@ def geoid_correct(
     bedmachine_fpath: Optional[str] = None,
     geoid: Optional[DataArray] = None,
 ) -> DataArray:
-    """Geoid correct a DEM using a geoid. Can provide either your own geoid (as a
+    """Returns a geoid-corrected DEM. Can provide either your own geoid (as a
     DataArray) using the `geoid` variable, or the filepath to an appropriate BedMachine
     dataset using the `bedmachine_fpath` variable.
 
@@ -63,10 +63,10 @@ def mask_bedrock(
     grimp_mask_dir: Optional[str] = None,
     mask: Optional[DataArray] = None,
 ) -> DataArray:
-    """Mask bedrock from the DEM. Can either provide your own mask (as a DataArray) using
-    the `mask` variable (where land = 0/False and ice/ocean = 1/True), or provide the
-    path to a directory containing the GrIMP 15 m output using the `grimp_mask_dir`
-    variable.
+    """Returns a bedrock-masked DEM. Can either provide your own mask (as a DataArray)
+    using the `mask` variable (where bedrock = 0/False and ice/ocean = 1/True), or
+    provide the path to a directory containing the GrIMP 15 m classification mask using
+    the `grimp_mask_dir` variable.
 
     :param dem: DEM as xarray DataArray
     :type dem: DataArray
@@ -108,9 +108,9 @@ def mask_bedrock(
 def mask_melange(
     dem: DataArray,
     resolution: Optional[float] = None,
-    candidate_height_thresh_m: Optional[float] = 15,
+    candidate_height_thresh_m: Optional[float] = 10,
     candidate_area_thresh_km2: Optional[float] = 1,
-    near_sealevel_thresh_m: Optional[float] = 10,
+    near_sealevel_thresh_m: Optional[float] = 15,
 ) -> DataArray:
     """Returns a DEM with mélange/ocean regions, as identified by `get_melange_mask()`
     function, filtered out. If no likely sea level is identified, returns the original
@@ -121,13 +121,13 @@ def mask_melange(
     :param resolution: Resolution of DEM strip, defaults to None
     :type resolution: float, optional
     :param candidate_height_thresh_m: Maximum value relative to geoid to be considered
-        as SL, in m, defaults to 15
+        as SL, in m, defaults to 10
     :type candidate_height_thresh_m: float
     :param candidate_area_thresh_km2: Minimum area beneath `candidate_height_thresh_m`
         to be considered for sea level assessment, in km^2, defaults to 1
     :type candidate_area_thresh_km2: float
     :param near_sealevel_thresh_m: Filter out regions below this value, in metres above
-        sea level, defaults to 10
+        sea level, defaults to 15
     :type near_sealevel_thresh_m: float
 
     :returns: Filtered DEM as xarray DataArray
@@ -157,7 +157,7 @@ def get_melange_mask(
     resolution: Optional[float] = None,
     candidate_height_thresh_m: float = 10,
     candidate_area_thresh_km2: float = 1,
-    near_sealevel_thresh_m: float = 10,
+    near_sealevel_thresh_m: float = 15,
 ) -> DataArray:
     """Returns a mask of mélange/ocean regions of a DEM, using sea level as returned by
     the `get_sea_level()` function. DEM must be geoid-corrected. In returned mask,
@@ -174,7 +174,7 @@ def get_melange_mask(
         to be considered for sea level assessment, in km^2, defaults to 1
     :type candidate_area_thresh_km2: float
     :param near_sealevel_thresh_m: Filter out regions below this value, in metres above
-        sea level, defaults to 10
+        sea level, defaults to 15
     :type near_sealevel_thresh_m: float
 
     :returns: Mask as xarray DataArray. Land/ice is True and ocean is False
@@ -204,8 +204,8 @@ def get_sea_level(
     candidate_height_thresh_m: float = 10,
     candidate_area_thresh_km2: float = 1,
 ) -> float:
-    """Get sea level following method of Shiggins _et al._ (2023). If no candidate sea
-    level is identified, None is returned. DEM must be geoid-corrected.
+    """Returns estimated sea level following method of Shiggins _et al._ (2023). If no
+    candidate sea level is identified, None is returned. DEM must be geoid-corrected.
 
     :param dem: Geoid-corrected DEM as xarray DataArray
     :type dem: DataArray

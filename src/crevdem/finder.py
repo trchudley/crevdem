@@ -36,8 +36,10 @@ def find(
     retain_intermediates: bool | tuple = False,
     verbose: bool = False,
 ) -> DataArray:
-    """
-    Batch processing of crevasse depths from input DEM strip.
+    """Returns crevasse depths, batch processed from input DEM strip. Parameters default
+    to Chudley _et al._ generic workflow for Greenland marine margins, but can be
+    modified. This function is a wrapper for the `detrend`, `bth_filter`,
+    `threshold_depth`, `interpolate_surface`, and `calc_depth` functions.
 
     :param dem: xarray DataArray of DEM strip
     :type dem: DataArray
@@ -77,8 +79,8 @@ def find(
     # Step 1: Detrend
     if verbose == True:
         print("Detrending...")
-    gauss_std = range * gauss_mult
-    dem_detrended = detrend(dem, gauss_std, gauss_cutoff, resolution=resolution)
+    gauss_std_m = range * gauss_mult
+    dem_detrended = detrend(dem, gauss_std_m, gauss_cutoff, resolution=resolution)
 
     # Step 2: BTH filter
     if verbose == True:
@@ -137,18 +139,18 @@ def find(
 
 def detrend(
     dem: DataArray,
-    gauss_std: float,
+    gauss_std_m: float,
     gauss_cutoff: Optional[float] = 1,
     resolution: Optional[float] = None,
 ) -> DataArray:
-    """Detrend the DEM DataArray using a large gaussian filter. Standard deviation size
-    should be >> the features of interest (in the default `crevdem` settings, I set the
-    gauss_std to be 3* the range).
+    """Returns a detrended DEM DataArray using a large gaussian filter. Standard
+    deviation size should be >> the features of interest (in the default `crevdem`
+    settings, the gauss_std to be 3* the range).
 
     :param dem: xarray of DEM with 'dem' attribute
     :type dem: DataArray
-    :param gauss_std: standard deviation of the Gaussian filter in metres
-    :type gauss_mult: float, optional
+    :param gauss_std_m: standard deviation of the Gaussian filter in metres
+    :type gauss_std_m: float, optional
     :param gauss_cutoff: Truncate the gaussian kernel at this many standard deviations,
         defaults to 1
     :type gauss_cutoff: float, optional
@@ -164,7 +166,7 @@ def detrend(
         resolution = get_resolution(dem)
 
     # Get standard deviation in pixel size
-    gauss_std_px = int(np.round(gauss_std / resolution))
+    gauss_std_px = int(np.round(gauss_std_m / resolution))
 
     # Get kernel size
     ksize = int(np.round(gauss_std_px * gauss_cutoff))
@@ -206,7 +208,8 @@ def bth_filter(
     kernel_diameter_m: float,
     resolution: Optional[float] = None,
 ) -> DataArray:
-    """Apply a black top hat filter to the (detrended) DEM DataArray.
+    """Returns a black-top-hat-filtered DEM DataArrat from the (detrended) DEM
+    DataArray. Kernel diameter is set following the range distance.
 
     :param dem_detrended: Detrended DEM DataArray
     :type dem_detrended: DataArray
@@ -251,7 +254,9 @@ def threshold_depth(
     bth: DataArray,
     depth_thresh_m: float,
 ) -> DataArray:
-    """Returns crevasse mask (crevasse = 1; not crevasse = 0).
+    """Returns crevasse mask (crevasse = 1; not crevasse = 0) DataArray from
+    BTH-filtered DataArray. Mask is filtered to the threshold BTH value, which is set
+    to 1 metre in the default workflow.
 
     :param bth: BTH-filtered DEM, as DataArray
     :type bth: DataArray
@@ -282,9 +287,9 @@ def interpolate_surface(
     search_dist_px: int,
     smoothing_iterations: Optional[int] = 2,
 ) -> DataArray:
-    """
-    Fill crevasses using GDAL FillNodata algorithm (inverse distance weighting).
-    Smoothing iterations are applied to smooth out artefacts.
+    """Returns a 'crevasse-filled' DEM from the original DEM and crevasse mask, using
+    the GDAL FillNodata algorithm (inverse distance weighting) to fill crevasse-masked
+    regions. Smoothing iterations are applied to smooth  out artefacts.
 
     :param dem: DEM, as DataArray
     :type dem: DataArray
@@ -322,7 +327,7 @@ def interpolate_surface(
 
 
 def calc_depth(dem: DataArray, dem_filled: DataArray) -> DataArray:
-    """Calculate crevasse depth from the raw DEM and the filled DEM
+    """Returns final crevasse depth, calculated from the raw DEM and the filled DEM.
 
     :param dem: Raw DEM, as DataArray
     :type dem: DataArray
