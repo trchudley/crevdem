@@ -1,7 +1,5 @@
 """
 This module contains simple geospatial utility functions used in CrevDEM.
-
-Tom Chudley | Durham University | thomas.r.chudley@durham.ac.uk
 """
 
 import rioxarray as rxr

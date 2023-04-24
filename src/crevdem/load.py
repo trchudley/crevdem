@@ -1,8 +1,6 @@
 """
 This module contains the functions necessary to open the ArcticDEM/REMA strip as an 
 xarray DataArray suitable for further processing by `crevdem`. 
-
-Tom Chudley | Durham University | thomas.r.chudley@durham.ac.uk
 """
 
 import os

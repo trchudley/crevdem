@@ -4,33 +4,32 @@ from ArcticDEM/REMA strips, based around the use of black top hat (BTH) filterin
 _et al._ 2007). 
 
 The primary input is an xarray DataAray of a 2 m ArcticDEM or REMA strip, which can be 
-created and filtered using other functions of `crevdem`. 
+created and filtered using other functions within `crevdem`. 
 
 The key tunable parameter is the `range` variable, which is set to 60 m based on 
 variogram analysis of ArcticDEM strips of marine-terminating Greenlandic glaciers.
 An example of this anlaysis is included in the `notebooks` directory of the package.
-
-Tom Chudley | Durham University | thomas.r.chudley@durham.ac.uk
 """
 
-import timeit
+import time
 from typing import Optional
 
 import numpy as np
 
-from cv2 import GaussianBlur, morphologyEx, MORPH_BLACKHAT
+from cv2 import morphologyEx, MORPH_BLACKHAT
 from rasterio.fill import fillnodata
 from xarray import DataArray
 from numpy import maximum
 
 from ._utils import get_resolution
+from .preprocess import detrend
 
 
 def find(
     dem: DataArray,
     resolution: Optional[float] = None,
-    range: float = 60.0,
-    gauss_mult: float = 3,
+    range_m: float = 60.0,
+    gauss_std_m: float = 200,
     gauss_cutoff: float = 1.0,
     depth_thresh_m: float = 1.0,
     retain_intermediates: bool | tuple = False,
@@ -45,11 +44,10 @@ def find(
     :type dem: DataArray
     :param resolution: Resolution of DEM strip, defaults to None
     :type resolution: float, optional
-    :param range: Range of crevasse variability in metres, defaults to 60
-    :type range: float
-    :param gauss_mult: Multiplier applied to `range` parameter to determine the standard
-        deviation of the Gaussian filter, defaults to 3
-    :type gauss_mult: float
+    :param range_m: Range of crevasse variability in metres, defaults to 60
+    :type range_m: float
+    :param gauss_std_m: standard deviation of Gaussian filter in metres, defaults to 200
+    :type gauss_std_m: float
     :param gauss_cutoff: Truncate the gaussian kernel at this many standard deviations,
         defaults to 1
     :type gauss_cutoff: float
@@ -78,29 +76,46 @@ def find(
 
     # Step 1: Detrend
     if verbose == True:
-        print("Detrending...")
-    gauss_std_m = range * gauss_mult
+        print("Detrending...", end=" ")
+        start = time.time()
+
     dem_detrended = detrend(dem, gauss_std_m, gauss_cutoff, resolution=resolution)
+
+    if verbose == True:
+        print(f"{(time.time() - start):.1f} s")
 
     # Step 2: BTH filter
     if verbose == True:
-        print("Applying Black Top Hat filter...")
+        print("Applying Black Top Hat filter...", end=" ")
+        start = time.time()
+
     bth = bth_filter(
         dem_detrended,
-        kernel_diameter_m=range,
+        kernel_diameter_m=range_m,
         resolution=resolution,
     )
 
+    if verbose == True:
+        print(f"{(time.time() - start):.1f} s")
+
     # Step 3: Depth filter
     if verbose == True:
-        print("Applying depth threshold...")
+        print("Applying depth threshold...", end=" ")
+        start = time.time()
+
     crev_mask = threshold_depth(bth, depth_thresh_m)
+
+    if verbose == True:
+        print(f"{(time.time() - start):.1f} s")
 
     # Step 4: Infilling
     if verbose == True:
-        print("Interpolating surface...")
+        print("Interpolating surface...", end=" ")
+        start = time.time()
+
     # Set search distance is twice range
-    search_dist_px = int(np.round(range / resolution)) * 2
+    search_dist_px = int(np.round(range_m / resolution)) * 2
+
     dem_filled = interpolate_surface(
         dem,
         crev_mask,
@@ -108,13 +123,22 @@ def find(
         smoothing_iterations=2,
     )
 
+    if verbose == True:
+        print(f"{(time.time() - start):.1f} s")
+
     # Step 5: Calculating crevasse depth
     if verbose == True:
-        print("Calculating crevasse depth...")
-    # crev_depth = dem_filled - dem
+        print("Calculating crevasse depth...", end=" ")
+        start = time.time()
+
     crev_depth = calc_depth(dem, dem_filled)
 
-    print("Finished")
+    if verbose == True:
+        print(f"{(time.time() - start):.1f} s")
+
+    if verbose == True:
+        print("Finished")
+
     # Step 6a: If not retaining intermediates, return filled DEM
     if retain_intermediates == False:
         del (
@@ -135,50 +159,6 @@ def find(
         xds["crev_depth"] = crev_depth
 
         return xds
-
-
-def detrend(
-    dem: DataArray,
-    gauss_std_m: float,
-    gauss_cutoff: Optional[float] = 1,
-    resolution: Optional[float] = None,
-) -> DataArray:
-    """Returns a detrended DEM DataArray using a large gaussian filter. Standard
-    deviation size should be >> the features of interest (in the default `crevdem`
-    settings, the gauss_std to be 3* the range).
-
-    :param dem: xarray of DEM with 'dem' attribute
-    :type dem: DataArray
-    :param gauss_std_m: standard deviation of the Gaussian filter in metres
-    :type gauss_std_m: float, optional
-    :param gauss_cutoff: Truncate the gaussian kernel at this many standard deviations,
-        defaults to 1
-    :type gauss_cutoff: float, optional
-    :param resolution: Resolution of DEM strip, defaults to None
-    :type resolution: float, optional
-
-    :returns: Detrended DEM as DataArray.
-    :rtype: DataArray
-    """
-
-    # Get resolution if not provided
-    if resolution == None:
-        resolution = get_resolution(dem)
-
-    # Get standard deviation in pixel size
-    gauss_std_px = int(np.round(gauss_std_m / resolution))
-
-    # Get kernel size
-    ksize = int(np.round(gauss_std_px * gauss_cutoff))
-    if ksize % 2 == 0:  # kernel size needs to be odd
-        ksize += 1
-
-    # perform gaussian blur, add to dataset
-    dem_detrend = GaussianBlur(dem.values, (ksize, ksize), gauss_std_px)
-
-    dem_detrended = dem - dem_detrend
-
-    return dem_detrended
 
 
 def _bth_kernel(kernel_diameter_m: float, resolution: float) -> np.ndarray:

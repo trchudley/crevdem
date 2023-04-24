@@ -1,20 +1,61 @@
 """
-This module contains the functions necessary to mask an ArcticDEM/REMA strip loaded 
-by the `load_aws()` or `load_local()` functions, to facilitate further processing by 
-`crevdem`. 
-
-TODO: Additional filter for masking remnant cloud blunders?
-
-Tom Chudley | Durham University | thomas.r.chudley@durham.ac.uk
+This module contains the functions necessary to preprocess an ArcticDEM/REMA strip 
+loaded by the `load_aws()` or `load_local()` functions, to facilitate further 
+processing by `crevdem`. 
 """
 
 from typing import Optional
 
-from numpy import arange, histogram, argmax
+import numpy as np
 from xarray import DataArray
+from cv2 import GaussianBlur
 
 from ._utils import get_resolution, geospatial_match
 from .datasets import get_grimp_mask, get_bedmachine_geoid
+
+
+def detrend(
+    dem: DataArray,
+    gauss_std_m: float,
+    gauss_cutoff: Optional[float] = 1,
+    resolution: Optional[float] = None,
+) -> DataArray:
+    """Returns a detrended DEM DataArray using a large gaussian filter. Standard
+    deviation size should be >> the features of interest (in the default `crevdem`
+    settings, the gauss_std_m is 200).
+
+    :param dem: xarray of DEM with 'dem' attribute
+    :type dem: DataArray
+    :param gauss_std_m: standard deviation of the Gaussian filter in metres
+    :type gauss_std_m: float, optional
+    :param gauss_cutoff: Truncate the gaussian kernel at this many standard deviations,
+        defaults to 1
+    :type gauss_cutoff: float, optional
+    :param resolution: Resolution of DEM strip, defaults to None
+    :type resolution: float, optional
+
+    :returns: Detrended DEM as DataArray.
+    :rtype: DataArray
+    """
+
+    # Get resolution if not provided
+    if resolution == None:
+        resolution = get_resolution(dem)
+
+    # Get standard deviation in pixel size
+    gauss_std_px = int(np.round(gauss_std_m / resolution))
+
+    # Get kernel size
+    ksize = int(np.round(gauss_std_px * gauss_cutoff))
+    if ksize % 2 == 0:  # kernel size needs to be odd
+        ksize += 1
+
+    # perform gaussian blur, add to dataset
+    dem_detrend = GaussianBlur(dem.values, (ksize, ksize), gauss_std_px)
+
+    dem_detrended = dem - dem_detrend
+
+    return dem_detrended
 
 
 def geoid_correct(
@@ -110,7 +151,7 @@ def mask_melange(
     resolution: Optional[float] = None,
     candidate_height_thresh_m: Optional[float] = 10,
     candidate_area_thresh_km2: Optional[float] = 1,
-    near_sealevel_thresh_m: Optional[float] = 15,
+    near_sealevel_thresh_m: Optional[float] = 5,
 ) -> DataArray:
     """Returns a DEM with mélange/ocean regions, as identified by `get_melange_mask()`
     function, filtered out. If no likely sea level is identified, returns the original
@@ -127,7 +168,7 @@ def mask_melange(
         to be considered for sea level assessment, in km^2, defaults to 1
     :type candidate_area_thresh_km2: float
     :param near_sealevel_thresh_m: Filter out regions below this value, in metres above
-        sea level, defaults to 15
+        sea level, defaults to 5
     :type near_sealevel_thresh_m: float
 
     :returns: Filtered DEM as xarray DataArray
@@ -157,7 +198,7 @@ def get_melange_mask(
     resolution: Optional[float] = None,
     candidate_height_thresh_m: float = 10,
     candidate_area_thresh_km2: float = 1,
-    near_sealevel_thresh_m: float = 15,
+    near_sealevel_thresh_m: float = 5,
 ) -> DataArray:
     """Returns a mask of mélange/ocean regions of a DEM, using sea level as returned by
     the `get_sea_level()` function. DEM must be geoid-corrected. In returned mask,
@@ -174,7 +215,7 @@ def get_melange_mask(
         to be considered for sea level assessment, in km^2, defaults to 1
     :type candidate_area_thresh_km2: float
     :param near_sealevel_thresh_m: Filter out regions below this value, in metres above
-        sea level, defaults to 15
+        sea level, defaults to 5
     :type near_sealevel_thresh_m: float
 
     :returns: Mask as xarray DataArray. Land/ice is True and ocean is False
@@ -239,11 +280,11 @@ def get_sea_level(
 
     # Else, construct a 0.25m resolution histogram between -15 and +15:
     else:
-        bin_edges = arange(-15.125, 15.375, 0.25)
+        bin_edges = np.arange(-15.125, 15.375, 0.25)
         bin_centres = bin_edges[:-1] + 0.125
-        hist, _ = histogram(near_sealevel_values, bins=bin_edges)
+        hist, _ = np.histogram(near_sealevel_values, bins=bin_edges)
 
         # The estimated sea level is the centre of the modal bin
-        est_sea_level = bin_centres[argmax(hist)]
+        est_sea_level = bin_centres[np.argmax(hist)]
 
         return est_sea_level

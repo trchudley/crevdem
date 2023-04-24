@@ -2,8 +2,6 @@
 This module contains functions for loading supplementary data, including geoid and 
 surface mask data, from third-party datasets (BedMachine and GrIMP). The local file
 locations must be provided. 
-
-Tom Chudley | Durham University | thomas.r.chudley@durham.ac.uk
 """
 
 

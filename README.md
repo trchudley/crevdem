@@ -4,7 +4,10 @@
 
 ![An aerial image of crevasses on the Greenland Ice Sheet](./images/crevasses_uav_header.jpeg "An aerial image of crevasses on the Greenland Ice Sheet")
 
-CrevDEM is a Python package for extracting crevasse location and volume from high-resolution Digital Elevation Models (DEMs) of glaciers and ice sheets.
+CrevDEM is a Python package for extracting crevasse location and volume from high-resolution Digital Elevation Models (DEMs) of glaciers and ice sheets provided by the ArcticDEM and REMA projects.
+
+> **Warning** 
+> These tools are designed for scientific purposes only. ArcticDEM and REMA strips are not suitable for detecting metre-scale and snow-covered crevasses, and should not be used for field hazard assessment.
 
 The functions within provide a complete workflow for:
 
@@ -14,10 +17,8 @@ The functions within provide a complete workflow for:
 
 The principle of crevasse extraction is based around Black Top Hat filtering of a detrended surface (Kodde _et al._ 2007). The optimal kernel size can be determined quantiatively through the use of variogram analysis: a notebook is provided to aid with this. 
 
-> **Warning** 
-> This workflow is designed for scientific purposes only. ArcticDEM and REMA strips are not suitable for detecting sub-decametre-scale and snow-covered crevasses, and should not be used for field hazard assessment.
-
 ![An example output from CrevDEM](./images/crevdem_output.jpg "An example output from CrevDEM")
+
 
 # Cite
 
@@ -69,13 +70,13 @@ The sections below briefly outline the purpose of user-exposed functions availab
 
 Information on the required and optional input variable for individual functions can be accessed through Python's `help()` function, e.g. `help(crevdem.load_aws)`.
 
-### Loading
+### Loading DEM strips from the cloud
 
 `load_aws()` - Returns the selected ArcticDEM/REMA strip, downloaded from the relevant AWS bucket, as an xarray DataArray suitable for further processing by `crevdem`. Option to filter to bounds and bitmask. 2 m DEM strips are large in size and loading remotely from AWS may take some time.
 
 `load_local()` - Loads the desired ArcticDEM/REMA DEM strip, from local filepaths, as an xarray DataArray suitable for further processing by `crevdem`. Option to filter to bounds and bitmask.
 
-### Filtering
+### Preprocessing the DEM strips
 
 `mask_bedrock()` - Returns a bedrock-masked DEM. Can either provide your own mask (as a DataArray) using the `mask` variable (where bedrock = 0/False and ice/ocean = 1/True), or provide the path to a directory containing the [GrIMP 15 m classification mask](https://doi.org/10.5067/B8X58MQBFUPA) using the `grimp_mask_dir` variable.
 
@@ -101,15 +102,14 @@ Information on the required and optional input variable for individual functions
 
  - `calc_depth()` - Returns final crevasse depth, calculated from the raw DEM and the filled DEM.
 
-# Improvements
 
- - [ ] Print timing during verbose output
- - [ ] BedMachine mask option for Antarctica
+# Improvements
 
 The tool is presented _as-is_, but requests/contributions to functionality are welcome (thomas.r.chudley@durham.ac.uk). Avenues for future work include the following:
 
- - An additional filter for remnant cloud blunders, as implemented in the latest ArcticDEM and REMA mosaic tools.
- - Exploring alternative/custom Gaussian filters to prevent erosion at edges. Currently, Guassian and BTH filters return `Nan` if `NaN`s are present within the kernel, leading to lack of analysis at glacier margins. It might be possible to rewrite these functions to account for `NaN` values (`astropy` already has such a function for Gaussian filters but is _very_ slow)
+ - Currently, the only automated input mask is the GrIMP mask. However, it would be relatively trivial to include an automated BedMachine mask option for use in Antarctica (and Greenland). The resolution is large (150 m), so some automated interpolation would probably be necessary.
+ - The default PGC bitmask has a habit of leaving in some cloud blunders. Ian Howat has implemented an additional filter (in Matlab) to catch these remnant cloud blunders in the latest ArcticDEM and REMA mosaic tools. This could be rewritten in Python to filter out these blunders.
+ - The currently chosen Guassian and BTH filters (as implemented in OpenCV) return `Nan` if `NaN`s are present within the kernel, leading to loss of data at glacier margins. It is worth searching for or developing alternative implementations to account for `NaN` values. `astropy` already has such a function for Gaussian filters but is very slow over large datasets. A test `numba.stencil` implementation was also slow (>6 m vs <1 s for OpenCV). 
 
 
 # References
