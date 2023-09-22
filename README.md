@@ -3,7 +3,7 @@
 **_Tools for extracting crevasse location and volume from high-resolution digital elevation models._**
 
 > **Note**
-> Our paper outlining using CrevDEM to assess crevasse change across the Greenland Ice Sheet is now in review. [Find the preprint on EarthArxiv](https://doi.org/10.31223/X58099).
+> Our paper using CrevDEM to assess crevasse change across the Greenland Ice Sheet is now in review. [Find the preprint on EarthArxiv](https://doi.org/10.31223/X58099).
 
 ![An aerial image of crevasses on the Greenland Ice Sheet](./images/crevasses_uav_header.jpeg "An aerial image of crevasses on the Greenland Ice Sheet")
 
