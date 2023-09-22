@@ -9,6 +9,7 @@ from typing import Optional
 import numpy as np
 from xarray import DataArray
 from cv2 import GaussianBlur
+from rasterio.enums import Resampling
 
 from ._utils import get_resolution, geospatial_match
 from .datasets import get_grimp_mask, get_bedmachine_geoid

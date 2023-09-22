@@ -27,8 +27,8 @@ def load_local(
     :param bounds: Clip to bounds [xmin, ymin, xmax, ymax], in EPSG:3413 (ArcticDEM) or
         EPSG:3031 (REMA), defaults to None
     :type bounds: tuple, optional
-    :param mask_fpath: Path to *_bitmask.tif file used to mask the DEM, defaults to None
-    :type mask_fpath: str, optional
+    :param bitmask_fpath: Path to *_bitmask.tif file used to mask the DEM, defaults to None
+    :type bitmask_fpath: str, optional
 
     :returns: xarray DataArray of DEM strip suitable for onward processing by `crevdem`
         package

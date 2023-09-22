@@ -2,6 +2,9 @@
 
 **_Tools for extracting crevasse location and volume from high-resolution digital elevation models._**
 
+> **Note**
+> Our paper outlining using CrevDEM to assess crevasse change across the Greenland Ice Sheet is now in review. [Find the preprint on EarthArxiv](https://doi.org/10.31223/X58099).
+
 ![An aerial image of crevasses on the Greenland Ice Sheet](./images/crevasses_uav_header.jpeg "An aerial image of crevasses on the Greenland Ice Sheet")
 
 CrevDEM is a Python package for extracting crevasse location and volume from high-resolution Digital Elevation Models (DEMs) of glaciers and ice sheets provided by the ArcticDEM and REMA projects.
@@ -24,7 +27,7 @@ The principle of crevasse extraction is based around Black Top Hat filtering of 
 
 Please cite the source paper when using CrevDEM:
 
-> Chudley, T. R., Howat, I. M., King, M. D., and MacKie, E. (_in prep_) An increase in crevasses across accelerating Greenland Ice Sheet margins.
+> Chudley, T. R., Howat, I. M., King, M. D., and MacKie, E. (_in review_) An increase in crevasses across accelerating Greenland Ice Sheet margins. Preprint doi:[10.31223/X58099](https://doi.org/10.31223/X58099)
 
 As always when using ArcticDEM and REMA products, please [cite](#refererences) the datasets appropriately and [acknowledge](#acknowledgements) the PGC.
 
@@ -41,7 +44,7 @@ cd crevdem
 pip install .
 ```
 
-CrevDEM has the following dependencies:
+CrevDEM has the following dependencies. When installing into a conda environment, it may be beneficial to install these before the `pip` install.
   - rioxarray
   - Rasterio
   - Shapely
@@ -71,6 +74,9 @@ The sections below briefly outline the purpose of user-exposed functions availab
 Information on the required and optional input variable for individual functions can be accessed through Python's `help()` function, e.g. `help(crevdem.load_aws)`.
 
 ### Loading DEM strips from the cloud
+
+> **Note**
+> An updated and expanded version of these tools has been released as an independent Python package for searching, download, and preprocessing of both ArticDEM and REMA strips. [See `pdemtools` for more information.](https://github.com/trchudley/pdemtools).
 
 `load_aws()` - Returns the selected ArcticDEM/REMA strip, downloaded from the relevant AWS bucket, as an xarray DataArray suitable for further processing by `crevdem`. Option to filter to bounds and bitmask. 2 m DEM strips are large in size and loading remotely from AWS may take some time.
 
@@ -114,7 +120,7 @@ The tool is presented _as-is_, but requests/contributions to functionality are w
 
 # References
 
-Chudley, T. R., _et al._ (_in prep_). An increase in crevasses across accelerating Greenland Ice Sheet margins. 
+Chudley, T. R., _et al._ (_in review_). An increase in crevasses across accelerating Greenland Ice Sheet margins. Preprint: https://doi.org/10.31223/X58099
 
 Howat, I. (2017). MEaSUREs Greenland Ice Mapping Project (GIMP) Land Ice and Ocean Classification Mask, Version 1 [Data Set]. _NASA National Snow and Ice Data Center Distributed Active Archive Center_. https://doi.org/10.5067/B8X58MQBFUPA
 
