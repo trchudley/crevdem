@@ -1,0 +1,11 @@
+name: crevdem_env
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python>=3.10
+  - rioxarray
+  - rasterio
+  - shapely
+  - numpy
+  - opencv-python

@@ -2,17 +2,14 @@
 
 **_Tools for extracting crevasse location and volume from high-resolution digital elevation models._**
 
-> **Note**
-> Our paper using CrevDEM to assess crevasse change across the Greenland Ice Sheet is now in review. [Find the preprint on EarthArxiv](https://doi.org/10.31223/X58099).
-
 ![An aerial image of crevasses on the Greenland Ice Sheet](./images/crevasses_uav_header.jpeg "An aerial image of crevasses on the Greenland Ice Sheet")
 
-CrevDEM is a Python package for extracting crevasse location and volume from high-resolution Digital Elevation Models (DEMs) of glaciers and ice sheets provided by the ArcticDEM and REMA projects.
+CrevDEM is a Python package for extracting crevasse location and volume from high-resolution Digital Elevation Models (DEMs) of glaciers and ice sheets provided by the ArcticDEM and REMA projects. It is the software accompaniment to Chudley _et al._ (2025, _Nat. Geosci._)
 
 > **Warning** 
 > These tools are designed for scientific purposes only. ArcticDEM and REMA strips are not suitable for detecting metre-scale and snow-covered crevasses, and should not be used for field hazard assessment.
 
-The functions within provide a complete workflow for:
+The functions and associated notebooks provide a complete workflow for:
 
 1. Automatically downloading and clipping 2 m strips of the version 4.1 ArcticDEM (Porter _et al._ 2022) and Reference Elevation Model of Antarctica (REMA; Howat _et al._ 2022).
 2. DEM geoid correction and filtering of bare rock and proglacial sea-ice/mélange.
@@ -22,21 +19,22 @@ The principle of crevasse extraction is based around Black Top Hat filtering of 
 
 ![An example output from CrevDEM](./images/crevdem_output.jpg "An example output from CrevDEM")
 
-
-# Cite
+## Cite
 
 Please cite the source paper when using CrevDEM:
 
-> Chudley, T. R., Howat, I. M., King, M. D., and MacKie, E. (_in review_) An increase in crevasses across accelerating Greenland Ice Sheet margins. Preprint doi:[10.31223/X58099](https://doi.org/10.31223/X58099)
+> Chudley, T. R., Howat, I. M., King, M. D., and MacKie, E. (2025) Increased crevassing across accelerating Greenland Ice Sheet margins. _Nature Geoscience_ doi:[10.1038/s41561-024-01636-6](https://doi.org/10.1038/s41561-024-01636-6)
 
 As always when using ArcticDEM and REMA products, please [cite](#refererences) the datasets appropriately and [acknowledge](#acknowledgements) the PGC.
 
 
-# Installation
+## Installation
 
-## Install CrevDEM
+### Install CrevDEM
 
-After downloading, `crevdem` can be installed from the top-level directory via `pip install .`:
+CrevDEM is not currently available on package managers such as `pip` or `conda`/`mamba`, and so must be installed locally. 
+
+First, clone the github repository to your local environment. If you are exclusively managing your python packages using `pip` (i.e. not via `conda` or `mamba`), `crevdem` can be installed from the top-level directory via `pip install .`:
 
 ```bash
 git clone https://github.com/trchudley/crevdem
@@ -44,16 +42,33 @@ cd crevdem
 pip install .
 ```
 
-CrevDEM has the following dependencies. When installing into a conda environment, it may be beneficial to install these before the `pip` install.
-  - rioxarray
-  - Rasterio
-  - Shapely
-  - NumPy
-  - OpenCV
+If you are using `conda` or `mamba`, you may wish to install the necessary dependencies via these methods before installing `crevdem`. An `environment.yml` file is included to make this installation simple and easy:
 
-The variogram analysis notebook requires additional packages, including `scikit-gstat`. If you would rather not install these yourself using `conda` or similar, you can use `pip install .[variogram]` during the initial install.
+```bash
+git clone git@github.com:trchudley/pdemtools.git
+cd crevdem/
+mamba env create --file environment.yml -n crevdem_env
+mamba activate crevdem_env
+pip install .
+```
 
-## Install supplementary datasets
+Dependencies can also be installed independently by the user. They are:
+
+  - `rioxarray`
+  - `rasterio`
+  - `shapely`
+  - `numpy`
+  - `opencv-python`
+
+### Optional Packages and Datasets
+
+#### Packages
+
+`crevdem` does not provide a solution for searching and downloading ArcticDEM or REMA strips. The authors have released [an independent package, `pdemtools`, for this purpose](pdemtools.rtfd.io). Notes on how to use this are included in the [wordflow notebook](https://github.com/trchudley/crevdem/blob/main/notebooks/crevdem_workflow.ipynb).
+
+The [variogram analysis notebook](https://github.com/trchudley/crevdem/blob/main/notebooks/variogram_notebook.ipynb) requires additional explicit packages: `scikit-gstat`, `geopandas`, and `matplotlib`. If you would rather not install these yourself using `conda` or similar, you can use `pip install .[variogram]` during the initial install.
+
+#### Supplementary datasets
 
 Supplementary datasets are required to be available locally to complete geoid correction and filtering of non-glacial regions: specifically, the BedMachine Greenland v5 or BedMachine Antarctica v3 respectively (Morlighem _et al._ 2022a, 2022b) and, for Greenland, the GrIMP ice mask (Howat, 2017) for bedrock filtering. File or directory paths will be requested in the relevant functions.
 
@@ -66,21 +81,11 @@ python download_grimp_2015_15m.py
 python download_bedmachine_antarctica_v3.py
 ```
 
+## Usage
 
-# Usage
-
-The sections below briefly outline the purpose of user-exposed functions available through the package. In order to see them in action, Jupyter Notebooks are provided in the `./notebooks` directory in order to provide an introduction into the use of CrevDEM. 
+The sections below briefly outline the purpose of user-exposed functions available through the package. In order to see them in action, Jupyter Notebooks are provided in the [`./notebooks` directory](https://github.com/trchudley/crevdem/tree/main/notebooks) in order to provide an introduction into the use of CrevDEM. 
 
 Information on the required and optional input variable for individual functions can be accessed through Python's `help()` function, e.g. `help(crevdem.load_aws)`.
-
-### Loading DEM strips from the cloud
-
-> **Note**
-> An updated and expanded version of these tools has been released as an independent Python package for searching, download, and preprocessing of both ArticDEM and REMA strips. [See `pdemtools` for more information.](https://github.com/trchudley/pdemtools).
-
-`load_aws()` - Returns the selected ArcticDEM/REMA strip, downloaded from the relevant AWS bucket, as an xarray DataArray suitable for further processing by `crevdem`. Option to filter to bounds and bitmask. 2 m DEM strips are large in size and loading remotely from AWS may take some time.
-
-`load_local()` - Loads the desired ArcticDEM/REMA DEM strip, from local filepaths, as an xarray DataArray suitable for further processing by `crevdem`. Option to filter to bounds and bitmask.
 
 ### Preprocessing the DEM strips
 
@@ -108,17 +113,26 @@ Information on the required and optional input variable for individual functions
 
  - `calc_depth()` - Returns final crevasse depth, calculated from the raw DEM and the filled DEM.
 
+<!-- ### Loading DEM strips from the cloud
 
-# Improvements
+> **Note**
+> These functions are depracated. [It is not recommended to use the `pdemtools` package to download ArcticDEM and REMA strips.](https://github.com/trchudley/pdemtools).
+
+`load_aws()` - Returns the selected ArcticDEM/REMA strip, downloaded from the relevant AWS bucket, as an xarray DataArray suitable for further processing by `crevdem`. Option to filter to bounds and bitmask. 2 m DEM strips are large in size and loading remotely from AWS may take some time.
+
+`load_local()` - Loads the desired ArcticDEM/REMA DEM strip, from local filepaths, as an xarray DataArray suitable for further processing by `crevdem`. Option to filter to bounds and bitmask. -->
+
+
+## Improvements
 
 The tool is presented _as-is_, but requests/contributions to functionality are welcome (thomas.r.chudley@durham.ac.uk). Avenues for future work include the following:
 
- - Currently, the only automated input mask is the GrIMP mask. However, it would be relatively trivial to include an automated BedMachine mask option for use in Antarctica (and Greenland). The resolution is large (150 m), so some automated interpolation would probably be necessary.
+ - Currently, the only automated input mask is the GrIMP mask. However, `pdemtools` contains function for an automated BedMachine mask option for use in both Antarctica and Greenland at a larger resolution (150 m). A built-in wrapper function could introduct BedMachine masking to `crevdem`..
  - The default PGC bitmask has a habit of leaving in some cloud blunders. Ian Howat has implemented an additional filter (in Matlab) to catch these remnant cloud blunders in the latest ArcticDEM and REMA mosaic tools. This could be rewritten in Python to filter out these blunders.
  - The currently chosen Guassian and BTH filters (as implemented in OpenCV) return `Nan` if `NaN`s are present within the kernel, leading to loss of data at glacier margins. It is worth searching for or developing alternative implementations to account for `NaN` values. `astropy` already has such a function for Gaussian filters but is very slow over large datasets. A test `numba.stencil` implementation was also slow (>6 m vs <1 s for OpenCV). 
 
 
-# References
+## References
 
 Chudley, T. R., _et al._ (_in review_). An increase in crevasses across accelerating Greenland Ice Sheet margins. Preprint: https://doi.org/10.31223/X58099
 
@@ -136,7 +150,7 @@ Porter, C., _et al._ (2022). ArcticDEM - Strips, Version 4.1. _Harvard Dataverse
 
 Shiggins, _et al._ (2023). Automated ArcticDEM iceberg detection tool: insights into area and volume distributions, and their potential application to satellite imagery and modelling of glacier–iceberg–ocean systems, The Cryosphere, 17, 15–32, https://doi.org/10.5194/tc-17-15-2023
 
-# Acknowledgements
+## Acknowledgements
 
 **ArcticDEM:** DEMs are provided by the Polar Geospatial Center under NSF-OPP awards 1043681, 1559691, and 1542736.
 

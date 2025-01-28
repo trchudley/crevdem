@@ -5,6 +5,7 @@ xarray DataArray suitable for further processing by `crevdem`.
 
 import os
 from typing import Optional, Literal
+from warnings import warn
 
 import rioxarray as rxr
 
@@ -18,7 +19,10 @@ def load_local(
     bounds: Optional[tuple] = None,
     bitmask_fpath: Optional[str] = None,
 ) -> DataArray:
-    """Loads the desired ArcticDEM/REMA DEM strip, from local filepaths, as an xarray
+    """NOTE: THIS FUNCTION IS DEPRECATED. USE `pdemtools` TO DOWNLOAD ARCTICDEM/REMA
+    STRIP DATA INSTEAD.
+
+    Loads the desired ArcticDEM/REMA DEM strip, from local filepaths, as an xarray
     DataArray suitable for further processing by `crevdem`. Option to filter to bounds
     and bitmask.
 
@@ -34,6 +38,14 @@ def load_local(
         package
     :rtype: DataArray
     """
+
+    warn(
+        "The `load` module and assocaited functions are deprecated and will be removed in a "
+        "future version. Please use the `pdemtools` package to download ArcticDEM and REMA "
+        "strips instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
 
     # Open dataarray using rioxarray
     dem = rxr.open_rasterio(dem_fpath)
@@ -71,7 +83,10 @@ def load_aws(
     version: Optional[str] = "s2s041",
     preview: Optional[bool] = False,
 ) -> DataArray:
-    """Returns the selected ArcticDEM/REMA strip, downloaded from the relevant AWS
+    """NOTE: THIS FUNCTION IS DEPRECATED. USE `pdemtools` TO DOWNLOAD ARCTICDEM/REMA
+    STRIP DATA INSTEAD.
+
+    Returns the selected ArcticDEM/REMA strip, downloaded from the relevant AWS
     bucket, as an xarray DataArray suitable for further processing by `crevdem`. Option
     to filter to bounds and bitmask. 2 m DEM strips are large in size and loading
     remotely from AWS may take some time.
@@ -100,6 +115,14 @@ def load_aws(
         package
     :retype: DataArray
     """
+
+    warn(
+        "The `load` module and associated functions are deprecated and will be removed in a "
+        "future version. Please use the `pdemtools` package to download ArcticDEM and REMA "
+        "strips instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
 
     if preview == True:
         browser_prefix = "https://polargeospatialcenter.github.io/stac-browser/#/external/pgc-opendata-dems.s3.us-west-2.amazonaws.com"
