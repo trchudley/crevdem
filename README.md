@@ -64,7 +64,7 @@ Dependencies can also be installed independently by the user. They are:
 
 #### Packages
 
-`crevdem` does not provide a solution for searching and downloading ArcticDEM or REMA strips. The authors have released [an independent package, `pdemtools`, for this purpose](pdemtools.rtfd.io). Notes on how to use this are included in the ['workflow' notebook](https://github.com/trchudley/crevdem/blob/main/notebooks/crevdem_workflow.ipynb).
+`crevdem` does not provide a solution for searching and downloading ArcticDEM or REMA strips. [The authors have released an independent package, `pdemtools`](https://pdemtools.rtfd.io), for this purpose. This package is used to download ArcticDEM strips in the included Notebooks, and more information on how to use it to download strips can be found [here](https://pdemtools.readthedocs.io/en/latest/examples/strip_search.html).
 
 The [variogram analysis notebook](https://github.com/trchudley/crevdem/blob/main/notebooks/variogram_notebook.ipynb) requires additional explicit packages: `scikit-gstat`, `geopandas`, and `matplotlib`. If you would rather not install these yourself using `conda` or similar, you can use `pip install .[variogram]` during the initial install.
 
