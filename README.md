@@ -25,7 +25,7 @@ Please cite the source paper when using CrevDEM:
 
 > Chudley, T. R., Howat, I. M., King, M. D., and MacKie, E. (2025) Increased crevassing across accelerating Greenland Ice Sheet margins. _Nature Geoscience_ doi:[10.1038/s41561-024-01636-6](https://doi.org/10.1038/s41561-024-01636-6)
 
-As always when using ArcticDEM and REMA products, please [cite](#refererences) the datasets appropriately and [acknowledge](#acknowledgements) the PGC.
+As always when using ArcticDEM and REMA products, please [cite](#references) the datasets appropriately and [acknowledge](#acknowledgements) the PGC.
 
 
 ## Installation
