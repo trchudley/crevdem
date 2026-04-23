@@ -125,7 +125,7 @@ Information on the required and optional input variable for individual functions
 
 ## Improvements
 
-The tool is presented _as-is_, but requests/contributions to functionality are welcome (thomas.r.chudley@durham.ac.uk). Avenues for future work include the following:
+The tool is presented _as-is_, but requests/contributions to functionality are welcome (tom.chudley@bristol.ac.uk). Avenues for future work include the following:
 
  - Currently, the only automated input mask is the GrIMP mask. However, `pdemtools` contains function for an automated BedMachine mask option for use in both Antarctica and Greenland at a larger resolution (150 m). A built-in wrapper function could introduct BedMachine masking to `crevdem`..
  - The default PGC bitmask has a habit of leaving in some cloud blunders. Ian Howat has implemented an additional filter (in Matlab) to catch these remnant cloud blunders in the latest ArcticDEM and REMA mosaic tools. This could be rewritten in Python to filter out these blunders.
@@ -134,7 +134,7 @@ The tool is presented _as-is_, but requests/contributions to functionality are w
 
 ## References
 
-Chudley, T. R., _et al._ (_in review_). An increase in crevasses across accelerating Greenland Ice Sheet margins. Preprint: https://doi.org/10.31223/X58099
+Chudley, T. R., _et al._ (2025). An increase in crevasses across accelerating Greenland Ice Sheet margins. https://doi.org/10.1038/s41561-024-01636-6
 
 Howat, I. (2017). MEaSUREs Greenland Ice Mapping Project (GIMP) Land Ice and Ocean Classification Mask, Version 1 [Data Set]. _NASA National Snow and Ice Data Center Distributed Active Archive Center_. https://doi.org/10.5067/B8X58MQBFUPA
 
